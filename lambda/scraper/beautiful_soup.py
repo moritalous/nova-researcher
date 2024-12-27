@@ -1,3 +1,4 @@
+# https://github.com/assafelovic/gpt-researcher/blob/master/gpt_researcher/scraper/beautiful_soup/beautiful_soup.py
 from bs4 import BeautifulSoup
 
 

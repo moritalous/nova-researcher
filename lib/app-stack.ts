@@ -7,36 +7,48 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
+/**
+ * Represents the application stack for the Nova Researcher project.
+ * This stack defines various AWS resources including Lambda functions, 
+ * Bedrock inference profiles, prompts, and a flow for orchestrating 
+ * the research process.
+ */
 export class AppStack extends cdk.Stack {
+  /**
+   * Initializes a new instance of the AppStack class.
+   * 
+   * @param scope - The scope in which this stack is defined.
+   * @param id - The scoped construct ID.
+   * @param props - Stack properties.
+   */
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    /////// 
-    // 定数
-    /////// 
-    const tavily_api_parameter_name = "/nova_researcher/tavily_api_key"
+    // Define constants
+    const tavily_api_parameter_name = "/nova_researcher/tavily_api_key";
+    const total_words = "1000";
+    const report_format = "APA";
+    const max_iterations = "4";
 
-    const total_words = "1000"
-    const report_format = "APA"
-    const max_iterations = "4"
-    /////// 
-
+    // Retrieve the Tavily API key from AWS Systems Manager Parameter Store
     const tavily_api_key = ssm.StringParameter.fromSecureStringParameterAttributes(this, "tavily_api_key", {
       parameterName: tavily_api_parameter_name,
-    })
+    });
 
+    // Define Lambda layers
     const requestsLayer = new PythonLayerVersion(this, "requests_layer", {
       entry: "lambda_layer/requests",
       compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
       compatibleArchitectures: [lambda.Architecture.X86_64]
-    })
+    });
 
     const beautifulsoup4Layer = new PythonLayerVersion(this, "beautifulsoup4_layer", {
       entry: "lambda_layer/beautifulsoup4",
       compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
       compatibleArchitectures: [lambda.Architecture.X86_64]
-    })
+    });
 
+    // Define Lambda functions
     const array2stringFunction = new PythonFunction(this, "array2string_function", {
       entry: "lambda/array2string",
       index: "lambda_function.py",
@@ -44,7 +56,7 @@ export class AppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.X86_64
-    })
+    });
 
     const string2arrayFunction = new PythonFunction(this, "string2array_function", {
       entry: "lambda/string2array",
@@ -53,7 +65,7 @@ export class AppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.X86_64
-    })
+    });
 
     const string2objectFunction = new PythonFunction(this, "string2object_function", {
       entry: "lambda/string2object",
@@ -62,7 +74,7 @@ export class AppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.X86_64
-    })
+    });
 
     const tavilySearchFunction = new PythonFunction(this, "tavily_search_function", {
       entry: "lambda/tavily_search",
@@ -78,8 +90,8 @@ export class AppStack extends cdk.Stack {
         beautifulsoup4Layer,
         requestsLayer,
         lambda.LayerVersion.fromLayerVersionArn(this, "secret_extension", "arn:aws:lambda:us-east-1:177933569100:layer:AWS-Parameters-and-Secrets-Lambda-Extension:12")]
-    })
-    tavily_api_key.grantRead(tavilySearchFunction)
+    });
+    tavily_api_key.grantRead(tavilySearchFunction);
 
     const scraperFunction = new PythonFunction(this, "scraper_function", {
       entry: "lambda/scraper",
@@ -89,43 +101,44 @@ export class AppStack extends cdk.Stack {
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.X86_64,
       layers: [requestsLayer, beautifulsoup4Layer]
-    })
+    });
 
+    // Define Bedrock inference profiles
     const novaMicro = genai.bedrock.CrossRegionInferenceProfile.fromConfig({
       geoRegion: genai.bedrock.CrossRegionInferenceProfileRegion.US,
       model: genai.bedrock.BedrockFoundationModel.AMAZON_NOVA_MICRO_V1
-    })
+    });
     const novaLite = genai.bedrock.CrossRegionInferenceProfile.fromConfig({
       geoRegion: genai.bedrock.CrossRegionInferenceProfileRegion.US,
       model: genai.bedrock.BedrockFoundationModel.AMAZON_NOVA_LITE_V1
-    })
+    });
     const novaPro = genai.bedrock.CrossRegionInferenceProfile.fromConfig({
       geoRegion: genai.bedrock.CrossRegionInferenceProfileRegion.US,
       model: genai.bedrock.BedrockFoundationModel.AMAZON_NOVA_PRO_V1
-    })
+    });
 
     const fastLLM = new bedrock.CfnApplicationInferenceProfile(this, "fast_llm_inference_profile", {
       inferenceProfileName: "fast_llm",
       modelSource: {
         copyFrom: novaMicro.inferenceProfileArn
       }
-    })
+    });
 
     const smartLLM = new bedrock.CfnApplicationInferenceProfile(this, "smart_llm_inference_profile", {
       inferenceProfileName: "smart_llm",
       modelSource: {
         copyFrom: novaLite.inferenceProfileArn
       }
-    })
+    });
 
     const strategicLLM = new bedrock.CfnApplicationInferenceProfile(this, "strategic_llm_inference_profile", {
       inferenceProfileName: "strategic_llm",
       modelSource: {
         copyFrom: novaPro.inferenceProfileArn
       }
-    })
+    });
 
-
+    // Define Bedrock prompts
     const generateSummaryPrompt = new bedrock.CfnPrompt(this, "generate_summary_prompt", {
       name: "generate_summary_prompt",
       variants: [
