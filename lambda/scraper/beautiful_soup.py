@@ -27,7 +27,7 @@ class BeautifulSoupScraper:
         try:
             response = self.session.get(self.link, timeout=4)
             soup = BeautifulSoup(
-                response.content, "html.parser", from_encoding=response.encoding
+                response.content, "html.parser" #, from_encoding=response.encoding
             )
 
             for script_or_style in soup(["script", "style"]):

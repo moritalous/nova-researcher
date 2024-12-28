@@ -38,6 +38,16 @@ if submit:
             ],
         )
 
+        output = ""
         for stream in response["responseStream"]:
             if "flowOutputEvent" in stream:
-                st.write(stream["flowOutputEvent"]["content"]["document"])
+                out = stream["flowOutputEvent"]["content"]["document"]
+                output = output + out
+                st.write(out)
+
+        st.download_button(
+            label="Download Report",
+            data=output,
+            file_name="report.txt",
+            mime="plain/text",
+        )

@@ -1,5 +1,12 @@
 import requests
 from beautiful_soup import BeautifulSoupScraper
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+chunk_size = 5000
+chunk_overlap = 0
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=chunk_size, chunk_overlap=chunk_overlap
+)
 
 
 def lambda_handler(event, context):
@@ -33,7 +40,9 @@ def lambda_handler(event, context):
 
     for link in value:
         content, image_urls, title = BeautifulSoupScraper(
-            link=link, session=session).scrape()
-        contents.append(content)
+            link=link, session=session
+        ).scrape()
+        content = text_splitter.split_text(content)
+        contents.extend(content[:1])
 
     return contents

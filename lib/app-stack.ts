@@ -98,6 +98,16 @@ export class AppStack extends cdk.Stack {
       }
     );
 
+    const langchaintextsplittersLayer = new PythonLayerVersion(
+      this,
+      "langchaintextsplitters_layer",
+      {
+        entry: "lambda_layer/langchaintextsplitters",
+        compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+        compatibleArchitectures: [lambda.Architecture.X86_64],
+      }
+    );
+
     /**
      * Lambdaファンクション
      */
@@ -173,7 +183,7 @@ export class AppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(120),
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.X86_64,
-      layers: [requestsLayer, beautifulsoup4Layer],
+      layers: [requestsLayer, beautifulsoup4Layer, langchaintextsplittersLayer],
     });
 
     /**
@@ -418,7 +428,7 @@ export class AppStack extends cdk.Stack {
         ],
       })
     );
-    
+
     flowRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -430,10 +440,10 @@ export class AppStack extends cdk.Stack {
         ],
       })
     );
-    
-    novaMicro.grantInvoke(flowRole)
-    novaLite.grantInvoke(flowRole)
-    novaPro.grantInvoke(flowRole)
+
+    novaMicro.grantInvoke(flowRole);
+    novaLite.grantInvoke(flowRole);
+    novaPro.grantInvoke(flowRole);
 
     flowRole.addToPolicy(
       new iam.PolicyStatement({
