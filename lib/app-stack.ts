@@ -124,19 +124,6 @@ export class AppStack extends cdk.Stack {
       }
     );
 
-    const string2objectFunction = new PythonFunction(
-      this,
-      "string2object_function",
-      {
-        entry: "lambda/string2object",
-        index: "lambda_function.py",
-        handler: "lambda_handler",
-        timeout: cdk.Duration.seconds(10),
-        runtime: lambda.Runtime.PYTHON_3_12,
-        architecture: lambda.Architecture.X86_64,
-      }
-    );
-
     const tavilySearchFunction = new PythonFunction(
       this,
       "tavily_search_function",
@@ -408,7 +395,6 @@ export class AppStack extends cdk.Stack {
         actions: ["lambda:InvokeFunction"],
         resources: [
           string2arrayFunction.functionArn,
-          string2objectFunction.functionArn,
           tavilySearchFunction.functionArn,
           scraperFunction.functionArn,
         ],
