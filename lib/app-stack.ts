@@ -36,7 +36,7 @@ export class AppStack extends cdk.Stack {
       {
         type: "Number",
         default: 1000,
-        description: "プロンプトで使用するtotal_words",
+        description: "total_words to use in the prompt",
         noEcho: true,
       }
     );
@@ -46,7 +46,7 @@ export class AppStack extends cdk.Stack {
       {
         type: "String",
         default: "APA",
-        description: "プロンプトで使用するreport_format",
+        description: "report_format to use in the prompt",
         noEcho: true,
       }
     );
@@ -56,7 +56,7 @@ export class AppStack extends cdk.Stack {
       {
         type: "Number",
         default: "4",
-        description: "プロンプトで使用するmax_iterations",
+        description: "max_iterations to use in the prompt",
         noEcho: true,
       }
     );
