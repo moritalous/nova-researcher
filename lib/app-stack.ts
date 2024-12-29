@@ -111,19 +111,6 @@ export class AppStack extends cdk.Stack {
     /**
      * Lambdaファンクション
      */
-    const array2stringFunction = new PythonFunction(
-      this,
-      "array2string_function",
-      {
-        entry: "lambda/array2string",
-        index: "lambda_function.py",
-        handler: "lambda_handler",
-        timeout: cdk.Duration.seconds(10),
-        runtime: lambda.Runtime.PYTHON_3_12,
-        architecture: lambda.Architecture.X86_64,
-      }
-    );
-
     const string2arrayFunction = new PythonFunction(
       this,
       "string2array_function",
@@ -245,7 +232,7 @@ export class AppStack extends cdk.Stack {
       this,
       "generate_summary_prompt",
       {
-        name: "generate_summary_prompt",
+        name: "nova_researcher-generate_summary_prompt",
         variants: [
           {
             inferenceConfiguration: {
@@ -281,7 +268,7 @@ export class AppStack extends cdk.Stack {
       this,
       "generate_search_queries_prompt",
       {
-        name: "generate_search_queries_prompt",
+        name: "nova_researcher-generate_search_queries_prompt",
         variants: [
           {
             inferenceConfiguration: {
@@ -320,7 +307,7 @@ export class AppStack extends cdk.Stack {
       this,
       "generate_report_prompt",
       {
-        name: "generate_report_prompt",
+        name: "nova_researcher-generate_report_prompt",
         variants: [
           {
             inferenceConfiguration: {
@@ -356,7 +343,7 @@ export class AppStack extends cdk.Stack {
     );
 
     // const autoAgentInstructions = new bedrock.CfnPrompt(this, "auto_agent_instructions", {
-    //   name: "auto_agent_instructions",
+    //   name: "nova_researcher-auto_agent_instructions",
     //   variants: [
     //     {
     //       "inferenceConfiguration": {
@@ -420,7 +407,6 @@ export class AppStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         actions: ["lambda:InvokeFunction"],
         resources: [
-          array2stringFunction.functionArn,
           string2arrayFunction.functionArn,
           string2objectFunction.functionArn,
           tavilySearchFunction.functionArn,
@@ -520,23 +506,11 @@ export class AppStack extends cdk.Stack {
               configuration: {
                 data: {
                   sourceOutput: "functionResponse",
-                  targetInput: "codeHookInput",
-                },
-              },
-              name: "pre_searchLambdaFunctionNode0Toarray2string_1LambdaFunctionNode0",
-              source: "pre_search",
-              target: "array2string_1",
-              type: "Data",
-            },
-            {
-              configuration: {
-                data: {
-                  sourceOutput: "functionResponse",
                   targetInput: "context",
                 },
               },
-              name: "array2string_1LambdaFunctionNode0Togenerate_search_queries_promptPromptsNode3",
-              source: "array2string_1",
+              name: "pre_searchLambdaFunctionNode0Togenerate_search_queries_promptPromptsNode3",
+              source: "pre_search",
               target: "generate_search_queries_prompt",
               type: "Data",
             },
@@ -567,18 +541,6 @@ export class AppStack extends cdk.Stack {
             {
               configuration: {
                 data: {
-                  sourceOutput: "collectedArray",
-                  targetInput: "codeHookInput",
-                },
-              },
-              name: "CollectorNode_1CollectorNode0Toarray2string_2LambdaFunctionNode0",
-              source: "CollectorNode_1",
-              target: "array2string_2",
-              type: "Data",
-            },
-            {
-              configuration: {
-                data: {
                   sourceOutput: "arrayItem",
                   targetInput: "codeHookInput",
                 },
@@ -603,18 +565,6 @@ export class AppStack extends cdk.Stack {
             {
               configuration: {
                 data: {
-                  sourceOutput: "functionResponse",
-                  targetInput: "codeHookInput",
-                },
-              },
-              name: "scraperLambdaFunctionNode0Toarray2string_3LambdaFunctionNode0",
-              source: "scraper",
-              target: "array2string_3",
-              type: "Data",
-            },
-            {
-              configuration: {
-                data: {
                   sourceOutput: "arrayItem",
                   targetInput: "query",
                 },
@@ -631,8 +581,8 @@ export class AppStack extends cdk.Stack {
                   targetInput: "data",
                 },
               },
-              name: "array2string_3LambdaFunctionNode0Togenerate_summary_promptPromptsNode0",
-              source: "array2string_3",
+              name: "scraperLambdaFunctionNode0Togenerate_summary_promptPromptsNode0",
+              source: "scraper",
               target: "generate_summary_prompt",
               type: "Data",
             },
@@ -651,12 +601,12 @@ export class AppStack extends cdk.Stack {
             {
               configuration: {
                 data: {
-                  sourceOutput: "functionResponse",
+                  sourceOutput: "collectedArray",
                   targetInput: "context",
                 },
               },
-              name: "array2string_2LambdaFunctionNode0Togenerate_report_promptPromptsNode0",
-              source: "array2string_2",
+              name: "CollectorNode_1CollectorNode0Togenerate_report_promptPromptsNode0",
+              source: "CollectorNode_1",
               target: "generate_report_prompt",
               type: "Data",
             },
@@ -755,9 +705,9 @@ export class AppStack extends cdk.Stack {
                   type: "String",
                 },
                 {
-                  expression: "$.data",
+                  expression: "$.data.result",
                   name: "context",
-                  type: "String",
+                  type: "Array",
                 },
               ],
               name: "generate_search_queries_prompt",
@@ -787,50 +737,6 @@ export class AppStack extends cdk.Stack {
                 {
                   name: "functionResponse",
                   type: "Array",
-                },
-              ],
-              type: "LambdaFunction",
-            },
-            {
-              configuration: {
-                lambdaFunction: {
-                  lambdaArn: array2stringFunction.functionArn,
-                },
-              },
-              inputs: [
-                {
-                  expression: "$.data.result",
-                  name: "codeHookInput",
-                  type: "Array",
-                },
-              ],
-              name: "array2string_1",
-              outputs: [
-                {
-                  name: "functionResponse",
-                  type: "String",
-                },
-              ],
-              type: "LambdaFunction",
-            },
-            {
-              configuration: {
-                lambdaFunction: {
-                  lambdaArn: array2stringFunction.functionArn,
-                },
-              },
-              inputs: [
-                {
-                  expression: "$.data",
-                  name: "codeHookInput",
-                  type: "Array",
-                },
-              ],
-              name: "array2string_2",
-              outputs: [
-                {
-                  name: "functionResponse",
-                  type: "String",
                 },
               ],
               type: "LambdaFunction",
@@ -908,28 +814,6 @@ export class AppStack extends cdk.Stack {
             },
             {
               configuration: {
-                lambdaFunction: {
-                  lambdaArn: array2stringFunction.functionArn,
-                },
-              },
-              inputs: [
-                {
-                  expression: "$.data",
-                  name: "codeHookInput",
-                  type: "Array",
-                },
-              ],
-              name: "array2string_3",
-              outputs: [
-                {
-                  name: "functionResponse",
-                  type: "String",
-                },
-              ],
-              type: "LambdaFunction",
-            },
-            {
-              configuration: {
                 output: {},
               },
               inputs: [
@@ -978,7 +862,7 @@ export class AppStack extends cdk.Stack {
                 {
                   expression: "$.data",
                   name: "data",
-                  type: "String",
+                  type: "Array",
                 },
                 {
                   expression: "$.data",
@@ -1009,7 +893,7 @@ export class AppStack extends cdk.Stack {
                 {
                   expression: "$.data",
                   name: "context",
-                  type: "String",
+                  type: "Array",
                 },
                 {
                   expression: "$.data.task",
